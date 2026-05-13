@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Okto — Asana Sync</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #181c25;
+      --surface2: #1e2330;
+      --border: #2a2f3d;
+      --accent: #4f8ef7;
+      --accent-dim: rgba(79,142,247,0.12);
+      --green: #3ecf8e;
+      --green-dim: rgba(62,207,142,0.12);
+      --red: #f87171;
+      --red-dim: rgba(248,113,113,0.12);
+      --yellow: #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.1);
+      --text: #e8eaf0;
+      --text-dim: #6b7280;
+      --text-mid: #9ca3af;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-mid);
+      font-weight: 300;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+    .card-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    /* Drop zone */
+    .dropzone {
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+    }
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .dropzone-icon { font-size: 32px; margin-bottom: 10px; }
+    .dropzone-text { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .dropzone-sub { font-size: 12px; color: var(--text-dim); }
+    .dropzone.has-file { border-color: var(--green); background: var(--green-dim); }
+    .dropzone.has-file .dropzone-icon::before { content: "📄"; }
+    #file-input { display: none; }
+
+    /* Input */
+    .input-wrap { position: relative; }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--accent); }
+    .input-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+    .input-hint a { color: var(--accent); text-decoration: none; }
+
+    /* Toggle password */
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+    }
+
+    /* Button */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #6b9ff8; }
+    .btn-primary:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+    .btn-success {
+      background: var(--green);
+      color: #0f1117;
+    }
+    .btn-success:hover { background: #5dd9a4; }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text-mid);
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .btn-ghost:hover { background: var(--border); }
+
+    /* Results preview */
+    .preview {
+      margin-top: 16px;
+    }
+    .preview-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .project-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 8px;
+    }
+    .project-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .project-notes {
+      font-size: 12px;
+      color: var(--text-mid);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .fields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 6px;
+    }
+    .field-chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .field-chip-name { color: var(--text-dim); margin-bottom: 2px; }
+    .field-chip-val { color: var(--accent); font-weight: 500; }
+    .confidence {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+    .confidence.high { background: var(--green-dim); color: var(--green); }
+    .confidence.medium { background: var(--yellow-dim); color: var(--yellow); }
+    .confidence.low { background: var(--red-dim); color: var(--red); }
+
+    /* Log */
+    .log {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 2;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .log-line { display: flex; align-items: baseline; gap: 8px; }
+    .log-line.success { color: var(--green); }
+    .log-line.error { color: var(--red); }
+    .log-line.info { color: var(--text-mid); }
+    .log-line.skip { color: var(--yellow); }
+
+    /* Status bar */
+    .status-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .status-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none !important; }
+    .mt-16 { margin-top: 16px; }
+    .mt-8 { margin-top: 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo">Okto Dev</div>
+    <h1>Asana Smart Sync</h1>
+    <p class="subtitle">Upload any Excel file — AI reads it and updates Asana automatically</p>
+  </div>
+
+  <!-- Step 1: Upload -->
+  <div class="card" id="step-upload">
+    <div class="card-label">Step 1 — Upload Excel File</div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+      <div class="dropzone-icon">📂</div>
+      <div class="dropzone-text">Drop your Excel file here</div>
+      <div class="dropzone-sub">or click to browse — .xlsx supported</div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls" />
+  </div>
+
+  <!-- Step 2: Token -->
+  <div class="card" id="step-token">
+    <div class="card-label">Step 2 — Your Asana Token</div>
+    <div class="input-wrap">
+      <input type="password" id="asana-token" placeholder="2/xxxxxxx:xxxxxxx" autocomplete="off" />
+      <button class="toggle-pw" onclick="togglePw()" title="Show/hide">👁</button>
+    </div>
+    <div class="input-hint">
+      Get yours at <a href="https://app.asana.com/0/my-profile/apps" target="_blank">asana.com → My Profile → Apps</a>
+    </div>
+  </div>
+
+  <!-- Analyze button -->
+  <button class="btn btn-primary" id="btn-analyze" onclick="analyze()" disabled>
+    Analyze File
+  </button>
+
+  <!-- Preview section -->
+  <div id="section-preview" class="hidden mt-16">
+    <div class="card">
+      <div class="card-label">What Claude Found</div>
+      <div id="preview-content"></div>
+      <div class="divider"></div>
+      <button class="btn btn-success" id="btn-sync" onclick="sync()">
+        Push to Asana →
+      </button>
+      <button class="btn btn-ghost" onclick="reset()">Start Over</button>
+    </div>
+  </div>
+
+  <!-- Sync results -->
+  <div id="section-results" class="hidden mt-16">
+    <div class="card">
+      <div class="card-label">Sync Results</div>
+      <div class="status-bar"><div class="status-bar-fill" id="progress-bar" style="width:0%"></div></div>
+      <div class="log" id="log"></div>
+      <button class="btn btn-ghost mt-16" onclick="reset()">Sync Another File</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let selectedFile = null;
+  let analyzedProjects = [];
+
+  // ── Drag & drop ──────────────────────────────────────────────────
+  const dz = document.getElementById('dropzone');
+  const fi = document.getElementById('file-input');
+
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+  fi.addEventListener('change', () => { if (fi.files[0]) setFile(fi.files[0]); });
+
+  function setFile(f) {
+    selectedFile = f;
+    dz.classList.add('has-file');
+    dz.querySelector('.dropzone-text').textContent = f.name;
+    dz.querySelector('.dropzone-sub').textContent = `${(f.size / 1024).toFixed(1)} KB`;
+    checkReady();
+  }
+
+  document.getElementById('asana-token').addEventListener('input', checkReady);
+
+  function checkReady() {
+    const ready = selectedFile && document.getElementById('asana-token').value.trim().length > 10;
+    document.getElementById('btn-analyze').disabled = !ready;
+  }
+
+  function togglePw() {
+    const inp = document.getElementById('asana-token');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  // ── Analyze ──────────────────────────────────────────────────────
+  async function analyze() {
+    const btn = document.getElementById('btn-analyze');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Analyzing with AI...';
+
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+
+    try {
+      const res = await fetch('/analyze', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (data.error) {
+        alert('Error: ' + data.error);
+        btn.disabled = false;
+        btn.textContent = 'Analyze File';
+        return;
+      }
+
+      analyzedProjects = data.projects || [];
+      showPreview(analyzedProjects);
+
+    } catch (err) {
+      alert('Network error: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = 'Analyze File';
+    }
+  }
+
+  function formatField(name, value) {
+    const moneyFields = ['market_value','debt','noi','cost','gross_income','cashflow','expense','cashdown','price','cash_call'];
+    const pctFields = ['ltv','cap_rate'];
+    if (moneyFields.includes(name)) return '$' + Number(value).toLocaleString();
+    if (pctFields.includes(name)) return (value * 100).toFixed(2) + '%';
+    return Number(value).toLocaleString();
+  }
+
+  function showPreview(projects) {
+    const container = document.getElementById('preview-content');
+    if (!projects.length) {
+      container.innerHTML = '<p style="color:var(--text-mid);font-size:13px">No recognizable project data found in this file.</p>';
+      document.getElementById('btn-sync').disabled = true;
+    } else {
+      container.innerHTML = projects.map(p => `
+        <div class="project-card">
+          <span class="confidence ${p.confidence}">${p.confidence} confidence</span>
+          <div class="project-name">${p.name || 'Unknown project'}</div>
+          <div class="project-notes">${p.notes || ''}</div>
+          ${Object.keys(p.fields || {}).length ? `
+          <div class="fields-grid">
+            ${Object.entries(p.fields).map(([k, v]) => `
+              <div class="field-chip">
+                <div class="field-chip-name">${k.replace(/_/g,' ')}</div>
+                <div class="field-chip-val">${formatField(k, v)}</div>
+              </div>
+            `).join('')}
+          </div>` : '<div style="font-size:12px;color:var(--text-dim)">No numeric fields found</div>'}
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('section-preview').classList.remove('hidden');
+    document.getElementById('btn-analyze').textContent = 'Analyze File';
+  }
+
+  // ── Sync ─────────────────────────────────────────────────────────
+  async function sync() {
+    const token = document.getElementById('asana-token').value.trim();
+    if (!token) { alert('Enter your Asana token first'); return; }
+
+    document.getElementById('section-preview').classList.add('hidden');
+    document.getElementById('section-results').classList.remove('hidden');
+
+    const log = document.getElementById('log');
+    log.innerHTML = '';
+
+    function addLog(msg, type = 'info') {
+      const line = document.createElement('div');
+      line.className = `log-line ${type}`;
+      line.textContent = msg;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    addLog('Connecting to Asana...', 'info');
+
+    try {
+      const res = await fetch('/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asana_token: token, projects: analyzedProjects })
+      });
+      const data = await res.json();
+
+      if (data.error) { addLog('Error: ' + data.error, 'error'); return; }
+
+      const results = data.results || [];
+      const total = results.length;
+      let done = 0;
+
+      for (const r of results) {
+        done++;
+        document.getElementById('progress-bar').style.width = (done / total * 100) + '%';
+        if (r.status === 'success') addLog(`✅  ${r.name}`, 'success');
+        else if (r.status === 'skipped') addLog(`⚠️  ${r.name} — ${r.reason}`, 'skip');
+        else addLog(`❌  ${r.name} — ${r.reason}`, 'error');
+        await new Promise(r => setTimeout(r, 80));
+      }
+
+      const succeeded = results.filter(r => r.status === 'success').length;
+      addLog('', 'info');
+      addLog(`Done — ${succeeded} updated, ${total - succeeded} skipped/failed`, succeeded === total ? 'success' : 'info');
+
+    } catch (err) {
+      addLog('Network error: ' + err.message, 'error');
+    }
+  }
+
+  // ── Reset ─────────────────────────────────────────────────────────
+  function reset() {
+    selectedFile = null;
+    analyzedProjects = [];
+    document.getElementById('file-input').value = '';
+    dz.classList.remove('has-file');
+    dz.querySelector('.dropzone-text').textContent = 'Drop your Excel file here';
+    dz.querySelector('.dropzone-sub').textContent = 'or click to browse — .xlsx supported';
+    document.getElementById('section-preview').classList.add('hidden');
+    document.getElementById('section-results').classList.add('hidden');
+    document.getElementById('btn-analyze').disabled = true;
+    document.getElementById('btn-analyze').textContent = 'Analyze File';
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('log').innerHTML = '';
+  }
+</script>
+</body>
+</html>
