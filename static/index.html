@@ -6,521 +6,243 @@
   <title>Okto — Asana Sync</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0f1117;
-      --surface: #181c25;
-      --surface2: #1e2330;
-      --border: #2a2f3d;
-      --accent: #4f8ef7;
-      --accent-dim: rgba(79,142,247,0.12);
-      --green: #3ecf8e;
-      --green-dim: rgba(62,207,142,0.12);
-      --red: #f87171;
-      --red-dim: rgba(248,113,113,0.12);
-      --yellow: #fbbf24;
-      --yellow-dim: rgba(251,191,36,0.1);
-      --text: #e8eaf0;
-      --text-dim: #6b7280;
-      --text-mid: #9ca3af;
-      --mono: 'DM Mono', monospace;
-      --sans: 'DM Sans', sans-serif;
-    }
-
-    body {
-      font-family: var(--sans);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 48px 16px 80px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 680px;
-    }
-
-    /* Header */
-    .header {
-      margin-bottom: 40px;
-    }
-    .logo {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      color: var(--accent);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    h1 {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.03em;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: var(--text-mid);
-      font-weight: 300;
-    }
-
-    /* Card */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 16px;
-    }
-    .card-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    /* Drop zone */
-    .dropzone {
-      border: 1.5px dashed var(--border);
-      border-radius: 8px;
-      padding: 36px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
-      background: transparent;
-    }
-    .dropzone:hover, .dropzone.drag-over {
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }
-    .dropzone-icon { font-size: 32px; margin-bottom: 10px; }
-    .dropzone-text { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-    .dropzone-sub { font-size: 12px; color: var(--text-dim); }
-    .dropzone.has-file { border-color: var(--green); background: var(--green-dim); }
-    .dropzone.has-file .dropzone-icon::before { content: "📄"; }
-    #file-input { display: none; }
-
-    /* Input */
-    .input-wrap { position: relative; }
-    input[type="text"], input[type="password"] {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 16px;
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    input:focus { border-color: var(--accent); }
-    .input-hint {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 6px;
-    }
-    .input-hint a { color: var(--accent); text-decoration: none; }
-
-    /* Toggle password */
-    .toggle-pw {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      font-size: 13px;
-      padding: 4px;
-    }
-
-    /* Button */
-    .btn {
-      width: 100%;
-      padding: 14px;
-      font-family: var(--sans);
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-    .btn-primary:hover { background: #6b9ff8; }
-    .btn-primary:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
-    .btn-success {
-      background: var(--green);
-      color: #0f1117;
-    }
-    .btn-success:hover { background: #5dd9a4; }
-    .btn-ghost {
-      background: var(--surface2);
-      color: var(--text-mid);
-      border: 1px solid var(--border);
-      margin-top: 8px;
-    }
-    .btn-ghost:hover { background: var(--border); }
-
-    /* Results preview */
-    .preview {
-      margin-top: 16px;
-    }
-    .preview-title {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .project-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 8px;
-    }
-    .project-name {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .project-notes {
-      font-size: 12px;
-      color: var(--text-mid);
-      margin-bottom: 10px;
-      line-height: 1.5;
-    }
-    .fields-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 6px;
-    }
-    .field-chip {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-    .field-chip-name { color: var(--text-dim); margin-bottom: 2px; }
-    .field-chip-val { color: var(--accent); font-weight: 500; }
-    .confidence {
-      display: inline-block;
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      margin-bottom: 8px;
-    }
-    .confidence.high { background: var(--green-dim); color: var(--green); }
-    .confidence.medium { background: var(--yellow-dim); color: var(--yellow); }
-    .confidence.low { background: var(--red-dim); color: var(--red); }
-
-    /* Log */
-    .log {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      font-family: var(--mono);
-      font-size: 12px;
-      line-height: 2;
-      max-height: 260px;
-      overflow-y: auto;
-    }
-    .log-line { display: flex; align-items: baseline; gap: 8px; }
-    .log-line.success { color: var(--green); }
-    .log-line.error { color: var(--red); }
-    .log-line.info { color: var(--text-mid); }
-    .log-line.skip { color: var(--yellow); }
-
-    /* Status bar */
-    .status-bar {
-      height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-    .status-bar-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: width 0.4s ease;
-    }
-
-    /* Divider */
-    .divider { height: 1px; background: var(--border); margin: 20px 0; }
-
-    /* Spinner */
-    .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .hidden { display: none !important; }
-    .mt-16 { margin-top: 16px; }
-    .mt-8 { margin-top: 8px; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0f1117;--surface:#181c25;--surface2:#1e2330;--border:#2a2f3d;--accent:#4f8ef7;--accent-dim:rgba(79,142,247,0.12);--green:#3ecf8e;--green-dim:rgba(62,207,142,0.12);--red:#f87171;--red-dim:rgba(248,113,113,0.12);--yellow:#fbbf24;--yellow-dim:rgba(251,191,36,0.1);--text:#e8eaf0;--text-dim:#6b7280;--text-mid:#9ca3af;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px 80px}
+    .container{width:100%;max-width:720px}
+    .header{margin-bottom:36px}
+    .logo{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:12px}
+    h1{font-size:28px;font-weight:600;letter-spacing:-.03em;margin-bottom:6px}
+    .subtitle{font-size:14px;color:var(--text-mid);font-weight:300}
+    .tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px}
+    .tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;border-radius:7px;cursor:pointer;border:none;background:transparent;color:var(--text-mid);transition:all .15s}
+    .tab.active{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+    .tab-panel{display:none}.tab-panel.active{display:block}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:16px}
+    .card-label{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px}
+    .token-bar{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:20px}
+    .token-bar label{font-family:var(--mono);font-size:10px;color:var(--text-dim);white-space:nowrap;letter-spacing:.1em}
+    .token-bar input{flex:1;background:transparent;border:none;font-family:var(--mono);font-size:12px;color:var(--text);outline:none}
+    .token-bar button{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px}
+    .dropzone{border:1.5px dashed var(--border);border-radius:8px;padding:32px 24px;text-align:center;cursor:pointer;transition:all .15s}
+    .dropzone:hover,.dropzone.drag-over{border-color:var(--accent);background:var(--accent-dim)}
+    .dropzone.has-file{border-color:var(--green);background:var(--green-dim)}
+    .dropzone-icon{font-size:28px;margin-bottom:8px}.dropzone-text{font-size:14px;font-weight:500;margin-bottom:4px}.dropzone-sub{font-size:12px;color:var(--text-dim)}
+    #file-input{display:none}
+    .chat-window{background:var(--surface2);border:1px solid var(--border);border-radius:10px;height:340px;overflow-y:auto;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px}
+    .msg{max-width:85%;display:flex;flex-direction:column;gap:4px}
+    .msg.user{align-self:flex-end;align-items:flex-end}
+    .msg.assistant{align-self:flex-start;align-items:flex-start}
+    .msg-bubble{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.5}
+    .msg.user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+    .msg.assistant .msg-bubble{background:var(--surface);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px}
+    .msg.assistant.success .msg-bubble{border-color:var(--green);background:var(--green-dim);color:var(--green)}
+    .msg.assistant.error .msg-bubble{border-color:var(--red);background:var(--red-dim);color:var(--red)}
+    .msg-time{font-family:var(--mono);font-size:10px;color:var(--text-dim)}
+    .chat-input-row{display:flex;gap:8px}
+    .chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none;transition:border-color .15s;resize:none;height:48px}
+    .chat-input:focus{border-color:var(--accent)}
+    .examples{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+    .example-chip{font-size:11px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text-mid);transition:all .15s;font-family:var(--mono)}
+    .example-chip:hover{border-color:var(--accent);color:var(--accent)}
+    .btn{padding:12px 20px;font-family:var(--sans);font-size:13px;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:all .15s}
+    .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#6b9ff8}.btn-primary:disabled{background:var(--border);color:var(--text-dim);cursor:not-allowed}
+    .btn-success{background:var(--green);color:#0f1117;width:100%;padding:14px}.btn-success:hover{background:#5dd9a4}
+    .btn-ghost{background:var(--surface2);color:var(--text-mid);border:1px solid var(--border);width:100%;padding:12px;margin-top:8px}.btn-ghost:hover{background:var(--border)}
+    .btn-send{background:var(--accent);color:#fff;border-radius:8px;padding:0 18px;height:48px;flex-shrink:0}.btn-send:disabled{background:var(--border);color:var(--text-dim);cursor:not-allowed}
+    .project-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:8px}
+    .project-name{font-size:13px;font-weight:600;margin-bottom:6px}.project-notes{font-size:12px;color:var(--text-mid);margin-bottom:10px;line-height:1.5}
+    .fields-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+    .field-chip{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-family:var(--mono);font-size:11px}
+    .field-chip-name{color:var(--text-dim);margin-bottom:2px}.field-chip-val{color:var(--accent);font-weight:500}
+    .confidence{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:20px;margin-bottom:8px}
+    .confidence.high{background:var(--green-dim);color:var(--green)}.confidence.medium{background:var(--yellow-dim);color:var(--yellow)}.confidence.low{background:var(--red-dim);color:var(--red)}
+    .status-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:16px}
+    .status-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
+    .log{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;line-height:2;max-height:220px;overflow-y:auto}
+    .log-line.success{color:var(--green)}.log-line.error{color:var(--red)}.log-line.info{color:var(--text-mid)}.log-line.skip{color:var(--yellow)}
+    .spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .divider{height:1px;background:var(--border);margin:20px 0}
+    .hidden{display:none!important}.mt-16{margin-top:16px}.mt-8{margin-top:8px}
   </style>
 </head>
 <body>
 <div class="container">
-
   <div class="header">
     <div class="logo">Okto Dev</div>
     <h1>Asana Smart Sync</h1>
-    <p class="subtitle">Upload any Excel file — AI reads it and updates Asana automatically</p>
+    <p class="subtitle">Upload a file or just type what you want to update</p>
   </div>
 
-  <!-- Step 1: Upload -->
-  <div class="card" id="step-upload">
-    <div class="card-label">Step 1 — Upload Excel File</div>
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
-      <div class="dropzone-icon">📂</div>
-      <div class="dropzone-text">Drop your Excel file here</div>
-      <div class="dropzone-sub">or click to browse — .xlsx supported</div>
-    </div>
-    <input type="file" id="file-input" accept=".xlsx,.xls" />
+  <div class="token-bar">
+    <label>ASANA TOKEN</label>
+    <input type="password" id="asana-token-global" placeholder="2/xxxxxxx:xxxxxxx" autocomplete="off" />
+    <button onclick="togglePw()" title="Show/hide">👁</button>
   </div>
 
-  <!-- Step 2: Token -->
-  <div class="card" id="step-token">
-    <div class="card-label">Step 2 — Your Asana Token</div>
-    <div class="input-wrap">
-      <input type="password" id="asana-token" placeholder="2/xxxxxxx:xxxxxxx" autocomplete="off" />
-      <button class="toggle-pw" onclick="togglePw()" title="Show/hide">👁</button>
-    </div>
-    <div class="input-hint">
-      Get yours at <a href="https://app.asana.com/0/my-profile/apps" target="_blank">asana.com → My Profile → Apps</a>
-    </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('chat')">💬 &nbsp;Chat Update</button>
+    <button class="tab" onclick="switchTab('upload')">📂 &nbsp;Upload File</button>
   </div>
 
-  <!-- Analyze button -->
-  <button class="btn btn-primary" id="btn-analyze" onclick="analyze()" disabled>
-    Analyze File
-  </button>
-
-  <!-- Preview section -->
-  <div id="section-preview" class="hidden mt-16">
+  <!-- CHAT TAB -->
+  <div class="tab-panel active" id="tab-chat">
     <div class="card">
-      <div class="card-label">What Claude Found</div>
-      <div id="preview-content"></div>
-      <div class="divider"></div>
-      <button class="btn btn-success" id="btn-sync" onclick="sync()">
-        Push to Asana →
-      </button>
-      <button class="btn btn-ghost" onclick="reset()">Start Over</button>
+      <div class="card-label">Type what you want to update</div>
+      <div class="examples">
+        <div class="example-chip" onclick="setExample(this)">update 720 MTL-TO market value to 95000000</div>
+        <div class="example-chip" onclick="setExample(this)">set NOI for Ind IPP - Hamel to 850000</div>
+        <div class="example-chip" onclick="setExample(this)">update Loblaws Acton Vale cap rate to 0.055 and debt to 9200000</div>
+        <div class="example-chip" onclick="setExample(this)">set cash call for Place Laval to 500000</div>
+      </div>
+      <div class="chat-window" id="chat-window">
+        <div class="msg assistant">
+          <div class="msg-bubble">Hey! Tell me what to update in Asana. You can say things like:<br><br>
+          <strong>"Update 720 MTL-TO market value to 95 million"</strong><br>
+          <strong>"Set NOI for Hamptons to 5.8M and LTV to 0.92"</strong><br>
+          <strong>"Update debt for all Edmonton projects to 50000000"</strong><br><br>
+          I'll figure out the rest and push it straight to Asana.</div>
+          <div class="msg-time">Okto AI</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Type your update here..." onkeydown="handleKey(event)"></textarea>
+        <button class="btn btn-send" id="btn-send" onclick="sendChat()">Send</button>
+      </div>
     </div>
   </div>
 
-  <!-- Sync results -->
-  <div id="section-results" class="hidden mt-16">
+  <!-- UPLOAD TAB -->
+  <div class="tab-panel" id="tab-upload">
     <div class="card">
-      <div class="card-label">Sync Results</div>
-      <div class="status-bar"><div class="status-bar-fill" id="progress-bar" style="width:0%"></div></div>
-      <div class="log" id="log"></div>
-      <button class="btn btn-ghost mt-16" onclick="reset()">Sync Another File</button>
+      <div class="card-label">Upload Excel File</div>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+        <div class="dropzone-icon">📂</div>
+        <div class="dropzone-text">Drop your Excel file here</div>
+        <div class="dropzone-sub">or click to browse — .xlsx supported</div>
+      </div>
+      <input type="file" id="file-input" accept=".xlsx,.xls" />
+    </div>
+    <button class="btn btn-primary" id="btn-analyze" onclick="analyze()" disabled style="width:100%;padding:14px;">Analyze File</button>
+    <div id="section-preview" class="hidden mt-16">
+      <div class="card">
+        <div class="card-label">What Claude Found</div>
+        <div id="preview-content"></div>
+        <div class="divider"></div>
+        <button class="btn btn-success" onclick="sync()">Push to Asana →</button>
+        <button class="btn btn-ghost" onclick="resetUpload()">Start Over</button>
+      </div>
+    </div>
+    <div id="section-results" class="hidden mt-16">
+      <div class="card">
+        <div class="card-label">Sync Results</div>
+        <div class="status-bar"><div class="status-bar-fill" id="progress-bar" style="width:0%"></div></div>
+        <div class="log" id="log"></div>
+        <button class="btn btn-ghost mt-16" onclick="resetUpload()">Sync Another File</button>
+      </div>
     </div>
   </div>
-
 </div>
 
 <script>
-  let selectedFile = null;
-  let analyzedProjects = [];
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['chat','upload'][i]===name));
+  document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',['tab-chat','tab-upload'][i]==='tab-'+name));
+}
+function togglePw(){const i=document.getElementById('asana-token-global');i.type=i.type==='password'?'text':'password';}
+function getToken(){return document.getElementById('asana-token-global').value.trim().replace(/^"|"$/g,'');}
+function setExample(el){document.getElementById('chat-input').value=el.textContent;document.getElementById('chat-input').focus();}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
+function now(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function addMsg(text,role,type=''){
+  const win=document.getElementById('chat-window');
+  const div=document.createElement('div');div.className=`msg ${role} ${type}`;
+  div.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${role==='user'?'You':'Okto AI'} · ${now()}</div>`;
+  win.appendChild(div);win.scrollTop=win.scrollHeight;return div;
+}
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const text=input.value.trim();if(!text)return;
+  const token=getToken();
+  if(!token){addMsg('Please enter your Asana token first','assistant','error');return;}
+  input.value='';document.getElementById('btn-send').disabled=true;
+  addMsg(text,'user');
+  const thinking=addMsg('<span class="spinner"></span>Thinking...','assistant');
+  try{
+    const res=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,asana_token:token})});
+    const data=await res.json();thinking.remove();
+    if(data.error){addMsg('❌ '+data.error,'assistant','error');}
+    else if(data.updates&&data.updates.length>0){
+      const ok=data.updates.filter(u=>u.status==='success');
+      const fail=data.updates.filter(u=>u.status!=='success');
+      let html='';
+      if(ok.length)html+=ok.map(u=>`✅ <strong>${u.name}</strong> — ${u.summary}`).join('<br>');
+      if(fail.length)html+=(html?'<br>':'')+fail.map(u=>`❌ <strong>${u.name}</strong> — ${u.reason||'failed'}`).join('<br>');
+      addMsg(html,'assistant',ok.length>0?'success':'error');
+    }else{addMsg(data.message||'Done!','assistant','success');}
+  }catch(err){thinking.remove();addMsg('❌ Network error: '+err.message,'assistant','error');}
+  document.getElementById('btn-send').disabled=false;
+}
 
-  // ── Drag & drop ──────────────────────────────────────────────────
-  const dz = document.getElementById('dropzone');
-  const fi = document.getElementById('file-input');
-
-  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-  dz.addEventListener('drop', e => {
-    e.preventDefault();
-    dz.classList.remove('drag-over');
-    const f = e.dataTransfer.files[0];
-    if (f) setFile(f);
-  });
-  fi.addEventListener('change', () => { if (fi.files[0]) setFile(fi.files[0]); });
-
-  function setFile(f) {
-    selectedFile = f;
-    dz.classList.add('has-file');
-    dz.querySelector('.dropzone-text').textContent = f.name;
-    dz.querySelector('.dropzone-sub').textContent = `${(f.size / 1024).toFixed(1)} KB`;
-    checkReady();
-  }
-
-  document.getElementById('asana-token').addEventListener('input', checkReady);
-
-  function checkReady() {
-    const ready = selectedFile && document.getElementById('asana-token').value.trim().length > 10;
-    document.getElementById('btn-analyze').disabled = !ready;
-  }
-
-  function togglePw() {
-    const inp = document.getElementById('asana-token');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
-
-  // ── Analyze ──────────────────────────────────────────────────────
-  async function analyze() {
-    const btn = document.getElementById('btn-analyze');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Analyzing with AI...';
-
-    const fd = new FormData();
-    fd.append('file', selectedFile);
-
-    try {
-      const res = await fetch('/analyze', { method: 'POST', body: fd });
-      const data = await res.json();
-
-      if (data.error) {
-        alert('Error: ' + data.error);
-        btn.disabled = false;
-        btn.textContent = 'Analyze File';
-        return;
-      }
-
-      analyzedProjects = data.projects || [];
-      showPreview(analyzedProjects);
-
-    } catch (err) {
-      alert('Network error: ' + err.message);
-      btn.disabled = false;
-      btn.textContent = 'Analyze File';
-    }
-  }
-
-  function formatField(name, value) {
-    const moneyFields = ['market_value','debt','noi','cost','gross_income','cashflow','expense','cashdown','price','cash_call'];
-    const pctFields = ['ltv','cap_rate'];
-    if (moneyFields.includes(name)) return '$' + Number(value).toLocaleString();
-    if (pctFields.includes(name)) return (value * 100).toFixed(2) + '%';
-    return Number(value).toLocaleString();
-  }
-
-  function showPreview(projects) {
-    const container = document.getElementById('preview-content');
-    if (!projects.length) {
-      container.innerHTML = '<p style="color:var(--text-mid);font-size:13px">No recognizable project data found in this file.</p>';
-      document.getElementById('btn-sync').disabled = true;
-    } else {
-      container.innerHTML = projects.map(p => `
-        <div class="project-card">
-          <span class="confidence ${p.confidence}">${p.confidence} confidence</span>
-          <div class="project-name">${p.name || 'Unknown project'}</div>
-          <div class="project-notes">${p.notes || ''}</div>
-          ${Object.keys(p.fields || {}).length ? `
-          <div class="fields-grid">
-            ${Object.entries(p.fields).map(([k, v]) => `
-              <div class="field-chip">
-                <div class="field-chip-name">${k.replace(/_/g,' ')}</div>
-                <div class="field-chip-val">${formatField(k, v)}</div>
-              </div>
-            `).join('')}
-          </div>` : '<div style="font-size:12px;color:var(--text-dim)">No numeric fields found</div>'}
-        </div>
-      `).join('');
-    }
-
-    document.getElementById('section-preview').classList.remove('hidden');
-    document.getElementById('btn-analyze').textContent = 'Analyze File';
-  }
-
-  // ── Sync ─────────────────────────────────────────────────────────
-  async function sync() {
-    const token = document.getElementById('asana-token').value.trim();
-    if (!token) { alert('Enter your Asana token first'); return; }
-
-    document.getElementById('section-preview').classList.add('hidden');
-    document.getElementById('section-results').classList.remove('hidden');
-
-    const log = document.getElementById('log');
-    log.innerHTML = '';
-
-    function addLog(msg, type = 'info') {
-      const line = document.createElement('div');
-      line.className = `log-line ${type}`;
-      line.textContent = msg;
-      log.appendChild(line);
-      log.scrollTop = log.scrollHeight;
-    }
-
-    addLog('Connecting to Asana...', 'info');
-
-    try {
-      const res = await fetch('/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ asana_token: token, projects: analyzedProjects })
-      });
-      const data = await res.json();
-
-      if (data.error) { addLog('Error: ' + data.error, 'error'); return; }
-
-      const results = data.results || [];
-      const total = results.length;
-      let done = 0;
-
-      for (const r of results) {
-        done++;
-        document.getElementById('progress-bar').style.width = (done / total * 100) + '%';
-        if (r.status === 'success') addLog(`✅  ${r.name}`, 'success');
-        else if (r.status === 'skipped') addLog(`⚠️  ${r.name} — ${r.reason}`, 'skip');
-        else addLog(`❌  ${r.name} — ${r.reason}`, 'error');
-        await new Promise(r => setTimeout(r, 80));
-      }
-
-      const succeeded = results.filter(r => r.status === 'success').length;
-      addLog('', 'info');
-      addLog(`Done — ${succeeded} updated, ${total - succeeded} skipped/failed`, succeeded === total ? 'success' : 'info');
-
-    } catch (err) {
-      addLog('Network error: ' + err.message, 'error');
-    }
-  }
-
-  // ── Reset ─────────────────────────────────────────────────────────
-  function reset() {
-    selectedFile = null;
-    analyzedProjects = [];
-    document.getElementById('file-input').value = '';
-    dz.classList.remove('has-file');
-    dz.querySelector('.dropzone-text').textContent = 'Drop your Excel file here';
-    dz.querySelector('.dropzone-sub').textContent = 'or click to browse — .xlsx supported';
-    document.getElementById('section-preview').classList.add('hidden');
-    document.getElementById('section-results').classList.add('hidden');
-    document.getElementById('btn-analyze').disabled = true;
-    document.getElementById('btn-analyze').textContent = 'Analyze File';
-    document.getElementById('progress-bar').style.width = '0%';
-    document.getElementById('log').innerHTML = '';
-  }
+// Upload tab
+let selectedFile=null,analyzedProjects=[];
+const dz=document.getElementById('dropzone'),fi=document.getElementById('file-input');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});
+fi.addEventListener('change',()=>{if(fi.files[0])setFile(fi.files[0]);});
+function setFile(f){selectedFile=f;dz.classList.add('has-file');dz.querySelector('.dropzone-text').textContent=f.name;dz.querySelector('.dropzone-sub').textContent=`${(f.size/1024).toFixed(1)} KB`;document.getElementById('btn-analyze').disabled=false;}
+async function analyze(){
+  const btn=document.getElementById('btn-analyze');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Analyzing...';
+  const fd=new FormData();fd.append('file',selectedFile);
+  try{const res=await fetch('/analyze',{method:'POST',body:fd});const data=await res.json();
+    if(data.error){alert('Error: '+data.error);}else{analyzedProjects=data.projects||[];showPreview(analyzedProjects);}
+  }catch(err){alert('Error: '+err.message);}
+  btn.disabled=false;btn.textContent='Analyze File';
+}
+function fmt(name,value){
+  const money=['market_value','debt','noi','cost','gross_income','cashflow','expense','cashdown','price','cash_call'];
+  const pct=['ltv','cap_rate'];
+  if(money.includes(name))return'$'+Number(value).toLocaleString();
+  if(pct.includes(name))return(value*100).toFixed(2)+'%';
+  return Number(value).toLocaleString();
+}
+function showPreview(projects){
+  const c=document.getElementById('preview-content');
+  c.innerHTML=!projects.length?'<p style="color:var(--text-mid);font-size:13px">No recognizable project data found.</p>':projects.map(p=>`
+    <div class="project-card"><span class="confidence ${p.confidence}">${p.confidence} confidence</span>
+    <div class="project-name">${p.name||'Unknown'}</div><div class="project-notes">${p.notes||''}</div>
+    ${Object.keys(p.fields||{}).length?`<div class="fields-grid">${Object.entries(p.fields).map(([k,v])=>`<div class="field-chip"><div class="field-chip-name">${k.replace(/_/g,' ')}</div><div class="field-chip-val">${fmt(k,v)}</div></div>`).join('')}</div>`:'<div style="font-size:12px;color:var(--text-dim)">No numeric fields found</div>'}
+    </div>`).join('');
+  document.getElementById('section-preview').classList.remove('hidden');
+}
+async function sync(){
+  const token=getToken();if(!token){alert('Enter your Asana token first');return;}
+  document.getElementById('section-preview').classList.add('hidden');document.getElementById('section-results').classList.remove('hidden');
+  const log=document.getElementById('log');log.innerHTML='';
+  const addLog=(msg,type='info')=>{const d=document.createElement('div');d.className=`log-line ${type}`;d.textContent=msg;log.appendChild(d);log.scrollTop=log.scrollHeight;};
+  addLog('Connecting to Asana...','info');
+  try{
+    const res=await fetch('/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({asana_token:token,projects:analyzedProjects})});
+    const data=await res.json();const results=data.results||[];
+    results.forEach((r,i)=>{
+      document.getElementById('progress-bar').style.width=((i+1)/results.length*100)+'%';
+      if(r.status==='success')addLog(`✅  ${r.name}`,'success');
+      else if(r.status==='skipped')addLog(`⚠️  ${r.name} — ${r.reason}`,'skip');
+      else addLog(`❌  ${r.name} — ${r.reason}`,'error');
+    });
+    const ok=results.filter(r=>r.status==='success').length;
+    addLog(`Done — ${ok} updated, ${results.length-ok} skipped/failed`,ok===results.length?'success':'info');
+  }catch(err){addLog('Error: '+err.message,'error');}
+}
+function resetUpload(){
+  selectedFile=null;analyzedProjects=[];fi.value='';dz.classList.remove('has-file');
+  dz.querySelector('.dropzone-text').textContent='Drop your Excel file here';
+  dz.querySelector('.dropzone-sub').textContent='or click to browse — .xlsx supported';
+  document.getElementById('section-preview').classList.add('hidden');document.getElementById('section-results').classList.add('hidden');
+  document.getElementById('btn-analyze').disabled=true;document.getElementById('progress-bar').style.width='0%';document.getElementById('log').innerHTML='';
+}
 </script>
 </body>
 </html>
