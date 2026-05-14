@@ -242,3 +242,81 @@ def sync():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    message = data.get("message", "").strip()
+    asana_token = data.get("asana_token", "").strip()
+
+    if not message:
+        return jsonify({"error": "No message provided"}), 400
+    if not asana_token:
+        return jsonify({"error": "Asana token required"}), 400
+    if not ANTHROPIC_API_KEY:
+        return jsonify({"error": "Anthropic API key not configured on server"}), 500
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    project_list = "\n".join(f"- {n}" for n in PROJECT_GIDS.keys())
+    field_list = "\n".join(f"- {n}" for n in ASANA_FIELDS.keys())
+
+    system_prompt = f"""You are an Asana update assistant for Okto, a real estate firm.
+Parse the user's natural language instruction and return JSON of what to update.
+
+Available projects:
+{project_list}
+
+Available fields:
+{field_list}
+
+Return ONLY valid JSON:
+{{"updates": [{{"name": "exact project name", "fields": {{"field_name": numeric_value}}, "summary": "what changed"}}], "message": "optional fallback"}}
+
+Match project names loosely. Only numeric values. If unparseable return {{"updates": [], "message": "Could not parse. Try: update [project] [field] to [value]"}}"""
+
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=800,
+            system=system_prompt,
+            messages=[{"role": "user", "content": message}]
+        )
+        raw = response.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        parsed = json.loads(raw.strip())
+    except Exception as e:
+        return jsonify({"error": f"AI error: {str(e)}"}), 500
+
+    updates = parsed.get("updates", [])
+    if not updates:
+        return jsonify({"updates": [], "message": parsed.get("message", "Nothing to update.")})
+
+    results = []
+    for u in updates:
+        name = u.get("name")
+        fields = u.get("fields", {})
+        summary = u.get("summary", "")
+        gid = PROJECT_GIDS.get(name)
+        if not gid:
+            results.append({"name": name, "status": "skipped", "reason": "Project not found", "summary": summary})
+            continue
+        custom_fields = {}
+        for field_name, value in fields.items():
+            field_gid = ASANA_FIELDS.get(field_name)
+            if field_gid:
+                custom_fields[field_gid] = float(value)
+        if not custom_fields:
+            results.append({"name": name, "status": "skipped", "reason": "No valid fields", "summary": summary})
+            continue
+        ok, err = update_asana_project(gid, custom_fields, asana_token)
+        time.sleep(0.2)
+        if ok:
+            results.append({"name": name, "status": "success", "summary": summary})
+        else:
+            results.append({"name": name, "status": "error", "reason": err, "summary": summary})
+
+    return jsonify({"updates": results})
